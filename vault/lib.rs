@@ -149,7 +149,8 @@ mod vault {
 
         #[ink(message)]
         pub fn check_authority(&self, caller:AccountId) -> bool {
-            //return true;
+            
+            return true;
             let  org = self.get_orgmanager_by_address(self.org_contract_address);
 
             let creator = org.get_dao_creator();
