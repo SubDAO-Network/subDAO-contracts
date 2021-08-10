@@ -261,6 +261,7 @@ mod vote_manager {
                 let mut vote = self.votes.get_mut(&vote_id).unwrap(); 
                 vote.executed = true;
                 let result = self.vault.withdraw(vote.erc20_address, vote.to_address, vote.value);
+                assert!(result);
                 self.env().emit_event(ExecuteVote{
                     vote_id,
                 });

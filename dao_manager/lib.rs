@@ -34,12 +34,12 @@ mod dao_manager {
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
     )]
     pub struct DAOComponents {
-        base: Option<Base>,
-        erc20: Option<Erc20>,
-        org: Option<OrgManager>,
-        vault: Option<VaultManager>,
-        vote: Option<VoteManager>,
-        auth: Option<Auth>,
+        pub base: Option<Base>,
+        pub erc20: Option<Erc20>,
+        pub org: Option<OrgManager>,
+        pub vault: Option<VaultManager>,
+        pub vote: Option<VoteManager>,
+        pub auth: Option<Auth>,
         //    github: Option<Github>,
     }
 
@@ -53,17 +53,17 @@ mod dao_manager {
     )]
     pub struct DAOComponentAddrs {
         // base module contract's address
-        base_addr: Option<AccountId>,
+        pub base_addr: Option<AccountId>,
         // erc20 module contract's address
-        erc20_addr: Option<AccountId>,
+        pub erc20_addr: Option<AccountId>,
         // org module contract's address
-        org_addr: Option<AccountId>,
+        pub org_addr: Option<AccountId>,
         // vault module contract's address
-        vault_addr: Option<AccountId>,
+        pub vault_addr: Option<AccountId>,
         // vote module contract's address
-        vote_addr: Option<AccountId>,
+        pub vote_addr: Option<AccountId>,
         // auth module contract's address
-        auth_addr: Option<AccountId>,
+        pub auth_addr: Option<AccountId>,
         // github module contract's address
         // github_addr: Option<AccountId>,
     }
@@ -141,12 +141,12 @@ mod dao_manager {
     /// to add new static storage fields to your contract.
     #[ink(storage)]
     pub struct DAOManager {
-        init: bool,
-        owner: AccountId,
-        org_id: u64,
-        template: Option<DAOTemplate>,
-        components: DAOComponents,
-        component_addrs: DAOComponentAddrs,
+        pub init: bool,
+        pub owner: AccountId,
+        pub org_id: u64,
+        pub template: Option<DAOTemplate>,
+        pub components: DAOComponents,
+        pub component_addrs: DAOComponentAddrs,
     }
 
     impl DAOManager {
@@ -210,8 +210,8 @@ mod dao_manager {
 
             // let version = self.org_id as u32;
             self._init_base(base_code_hash, params.base, &salt);
-            self._init_org(org_code_hash, params.org, &salt);
             self._init_auth(auth_code_hash, params.auth.clone(), &salt);
+            self._init_org(org_code_hash, params.org, &salt);
             self._init_vault(vault_code_hash, &salt);
             self._init_vote(vote_code_hash, &salt);
             self._init_erc20(erc20_code_hash, params.erc20, params.erc20Transfers, &salt);
@@ -324,7 +324,9 @@ mod dao_manager {
             assert!(total_balance > contract_init_balance, "not enough unit to instance contract");
             // instance org
             // let salt = version.to_le_bytes();
-            let org_instance_params = OrgManager::new(Self::env().account_id(), self.org_id)
+            let auth_addr = self.component_addrs.auth_addr.unwrap();
+
+            let org_instance_params = OrgManager::new(Self::env().account_id(), self.org_id, auth_addr)
                 .endowment(contract_init_balance)
                 .code_hash(org_code_hash)
                 .salt_bytes(salt)
@@ -333,9 +335,19 @@ mod dao_manager {
             let org_addr = org_init_result.expect("failed at instantiating the `Org` contract");
             let mut org_instance: OrgManager = ink_env::call::FromAccountId::from_account_id(org_addr);
 
+            let mut auth_instance: Auth = ink_env::call::FromAccountId::from_account_id(auth_addr);
+            auth_instance.grant_permission(org_addr, String::from("auth"), String::from("grant"));
+
+            // add dao owner as moderator
+            org_instance.add_dao_moderator_without_grant(String::from("Dao Owner"), param.owner);
+            auth_instance.grant_permission(param.owner, String::from("vote"), String::from("new"));
+            auth_instance.grant_permission(param.owner, String::from("vote"), String::from("vote"));
+
             // add moderator
             for (name, accountId) in &param.moderators {
-                org_instance.add_dao_moderator(name.clone(), *accountId);
+                org_instance.add_dao_moderator_without_grant(name.clone(), *accountId);
+                auth_instance.grant_permission(*accountId, String::from("vote"), String::from("new"));
+                auth_instance.grant_permission(*accountId, String::from("vote"), String::from("vote"));
             }
             org_instance.transfer_ownership(param.owner);
 
@@ -367,6 +379,10 @@ mod dao_manager {
 
             // register inner action
             auth_instance.register_action(String::from("vault"), String::from("add_vault_token"), String::from("vault.add_vault_token"));
+            auth_instance.register_action(String::from("vote"), String::from("new"), String::from("Create Voting"));
+            auth_instance.register_action(String::from("vote"), String::from("vote"), String::from("Vote"));
+            auth_instance.register_action(String::from("auth"), String::from("grant"), String::from("Grant/Revoke Permission"));
+            auth_instance.register_action(String::from("auth"), String::from("register"), String::from("Register/Cancel Action"));
 
             // grant inner action
             auth_instance.grant_permission(dao_addr, String::from("vault"), String::from("add_vault_token"));

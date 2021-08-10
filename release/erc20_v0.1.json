@@ -1,7 +1,7 @@
 {
   "metadataVersion": "0.1.0",
   "source": {
-    "hash": "0xf93eb9f7bd97c68bfb2518f1f46a8ea9cbbe2e1fe646e5d4910f41c4e34b07ed",
+    "hash": "0xdf1dcc96de3dd714ad49d836f32f00fdb45502304161865794bafcc090f399aa",
     "language": "ink! 3.0.0-rc3",
     "compiler": "rustc 1.53.0-nightly"
   },
@@ -81,7 +81,7 @@
               "displayName": [
                 "Option"
               ],
-              "type": 14
+              "type": 15
             }
           },
           {
@@ -92,7 +92,7 @@
               "displayName": [
                 "Option"
               ],
-              "type": 14
+              "type": 15
             }
           },
           {
@@ -232,6 +232,22 @@
         "selector": "0xfeaea4fa"
       },
       {
+        "args": [],
+        "docs": [],
+        "mutates": false,
+        "name": [
+          "query_info"
+        ],
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "DisplayInfo"
+          ],
+          "type": 13
+        },
+        "selector": "0x625cdfdc"
+      },
+      {
         "args": [
           {
             "name": "owner",
@@ -323,7 +339,7 @@
           "displayName": [
             "bool"
           ],
-          "type": 13
+          "type": 14
         },
         "selector": "0x84a15da1"
       },
@@ -358,7 +374,7 @@
           "displayName": [
             "bool"
           ],
-          "type": 13
+          "type": 14
         },
         "selector": "0x681266a0"
       },
@@ -402,7 +418,7 @@
           "displayName": [
             "bool"
           ],
-          "type": 13
+          "type": 14
         },
         "selector": "0x0b396f18"
       },
@@ -428,7 +444,7 @@
           "displayName": [
             "bool"
           ],
-          "type": 13
+          "type": 14
         },
         "selector": "0xb412fc0c"
       },
@@ -463,7 +479,7 @@
           "displayName": [
             "bool"
           ],
-          "type": 13
+          "type": 14
         },
         "selector": "0xa9b6f1b0"
       },
@@ -498,7 +514,7 @@
           "displayName": [
             "bool"
           ],
-          "type": 13
+          "type": 14
         },
         "selector": "0x61143ff8"
       }
@@ -918,6 +934,44 @@
           4
         ]
       }
+    },
+    {
+      "def": {
+        "composite": {
+          "fields": [
+            {
+              "name": "name",
+              "type": 1,
+              "typeName": "String"
+            },
+            {
+              "name": "symbol",
+              "type": 1,
+              "typeName": "String"
+            },
+            {
+              "name": "total_supply",
+              "type": 2,
+              "typeName": "u64"
+            },
+            {
+              "name": "decimals",
+              "type": 3,
+              "typeName": "u8"
+            },
+            {
+              "name": "owner",
+              "type": 4,
+              "typeName": "AccountId"
+            }
+          ]
+        }
+      },
+      "path": [
+        "erc20",
+        "erc20",
+        "DisplayInfo"
+      ]
     },
     {
       "def": {

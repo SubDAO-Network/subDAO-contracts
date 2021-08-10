@@ -33,6 +33,20 @@ type: query
 definition: pub fn total_supply(&self) -> u64;
 ```
 
+### query token info
+query ERC20 info.
+```bash
+type: query
+definition: pub fn query_info(&self) -> DisplayInfo;
+pub struct DisplayInfo {
+        name: String,
+        symbol: String,
+        total_supply: u64,
+        decimals: u8,
+        owner: AccountId,
+    }
+```
+
 ### query account's balance
 query account's balance.
 ```bash

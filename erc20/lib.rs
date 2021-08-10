@@ -9,6 +9,7 @@ mod erc20 {
     use alloc::string::String;
     use ink_storage::{
         collections::HashMap as StorageHashMap,
+        traits::{PackedLayout, SpreadLayout},
     };
 
     /// Indicates whether a transaction is already confirmed or needs further confirmations.
@@ -41,6 +42,19 @@ mod erc20 {
         spender: AccountId,
         #[ink(topic)]
         value: u64,
+    }
+
+    #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
+    #[cfg_attr(
+    feature = "std",
+    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+    )]
+    pub struct DisplayInfo {
+        name: String,
+        symbol: String,
+        total_supply: u64,
+        decimals: u8,
+        owner: AccountId,
     }
 
     impl Erc20 {
@@ -83,6 +97,17 @@ mod erc20 {
         #[ink(message)]
         pub fn owner(&self) -> AccountId {
             self.owner
+        }
+
+        #[ink(message)]
+        pub fn query_info(&self) -> DisplayInfo {
+            DisplayInfo {
+                name: self.name.clone(),
+                symbol: self.symbol.clone(),
+                total_supply: self.total_supply,
+                decimals: self.decimals,
+                owner: self.owner
+            }
         }
 
         #[ink(message)]

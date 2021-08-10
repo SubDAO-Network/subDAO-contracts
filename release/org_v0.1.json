@@ -1,7 +1,7 @@
 {
   "metadataVersion": "0.1.0",
   "source": {
-    "hash": "0x57a1ba46121a33dd78cb69d5c47c75aad53c64c03bccf8a0364c71eab8a7a61f",
+    "hash": "0xdbc81e081e9f7bb19b9a9e145445dd52ac03cee2e75916434042c95b8fc2c61b",
     "language": "ink! 3.0.0-rc3",
     "compiler": "rustc 1.53.0-nightly"
   },
@@ -32,6 +32,15 @@
                 "u64"
               ],
               "type": 10
+            }
+          },
+          {
+            "name": "auth_contract_address",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 4
             }
           }
         ],
@@ -423,6 +432,41 @@
           "type": 11
         },
         "selector": "0xd9c6b562"
+      },
+      {
+        "args": [
+          {
+            "name": "name",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 9
+            }
+          },
+          {
+            "name": "moderator",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "docs": [],
+        "mutates": true,
+        "name": [
+          "add_dao_moderator_without_grant"
+        ],
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "bool"
+          ],
+          "type": 11
+        },
+        "selector": "0x53a2fd7b"
       },
       {
         "args": [
@@ -997,6 +1041,15 @@
             }
           },
           "name": "is_owner"
+        },
+        {
+          "layout": {
+            "cell": {
+              "key": "0x0c00000003000000000000000000000000000000000000000000000000000000",
+              "ty": 4
+            }
+          },
+          "name": "auth_contract_address"
         }
       ]
     }

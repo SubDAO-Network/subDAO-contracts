@@ -14,7 +14,7 @@ ink_lang = { version = "3.0.0-rc3",  default-features = false }
 
 scale = { package = "parity-scale-codec", version = "2.0.1", default-features = false, features = ["derive"] }
 scale-info = { version = "0.6.0", default-features = false, features = ["derive"], optional = true }
-
+auth = { version = "0.1.0", path = "../auth", default-features = false, features = ["ink-as-dependency"] }
 
 [lib]
 name = "org"
@@ -35,5 +35,6 @@ std = [
     "ink_primitives/std",
     "scale/std",
     "scale-info/std",
+     "auth/std",
 ]
 ink-as-dependency = []

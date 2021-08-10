@@ -15,6 +15,7 @@ mod org {
     };
 
 
+    use auth::Auth;
     #[ink(storage)]
     pub struct OrgManager {
 
@@ -27,6 +28,7 @@ mod org {
         is_member: bool,
         is_moderator:bool,
         is_owner:bool,
+        auth_contract_address:AccountId,
     }
 
 
@@ -97,13 +99,14 @@ mod org {
     impl OrgManager {
 
         #[ink(constructor)]
-        pub fn new(_owner: AccountId,org_id:u64) -> Self {
+        pub fn new(_owner: AccountId,org_id:u64,auth_contract_address: AccountId) -> Self {
             Self {
                 org_id:org_id,
                 owner:_owner,
                 moderators: StorageHashMap::default(),
                 members: StorageHashMap::default(),
                 applying_members: StorageHashMap::default(),
+                auth_contract_address:auth_contract_address,
                 can_free_add_member: false,
                 is_member: false,
                 is_moderator:false,
@@ -126,6 +129,12 @@ mod org {
         pub fn set_can_free_add_member(&mut self,can_free_add_member:bool) -> bool {
             self.can_free_add_member = can_free_add_member;
             self.can_free_add_member
+        }
+
+        pub fn get_auth_by_address(&self, address:AccountId) -> Auth {
+            let  auth_instance: Auth = ink_env::call::FromAccountId::from_account_id(address);
+            auth_instance
+
         }
 
 
@@ -212,6 +221,35 @@ mod org {
             }
 
 
+
+            let  mut auth_instance = self.get_auth_by_address(self.auth_contract_address);
+           // assert!(self.owner == caller || self._has_permission(caller, String::from("auth"),String::from("grant")));
+            auth_instance.grant_permission(moderator, String::from("vote"), String::from("new"));
+            auth_instance.grant_permission(moderator, String::from("vote"), String::from("vote"));
+
+
+            match self.moderators.insert(moderator,name) {
+                Some(_) => { false},
+                None => {
+                    let org_id = self.org_id;
+                    self.env().emit_event(AddDAOModeratorEvent{
+                        moderator,
+                        org_id,});
+                    true
+                }
+            }
+        }
+
+
+        #[ink(message)]
+        pub fn add_dao_moderator_without_grant(&mut self,name:String,moderator: AccountId) -> bool  {
+            let caller = self.env().caller();
+
+
+            if caller != self.owner {
+                return false;
+            }
+
             match self.moderators.insert(moderator,name) {
                 Some(_) => { false},
                 None => {
@@ -227,9 +265,15 @@ mod org {
         #[ink(message)]
         pub fn add_dao_member(&mut self,name:String,member: AccountId) -> bool {
 
+            let caller = self.env().caller();
+
             if self.can_free_add_member == false {
                 return false
             }
+
+            let  mut auth_instance = self.get_auth_by_address(self.auth_contract_address);
+           // assert!(auth_instance.has_permission(caller, String::from("auth"),String::from("grant")));
+            auth_instance.grant_permission(member, String::from("vote"), String::from("vote"));
 
             match self.members.insert(member,name) {
                 Some(_) => { false},
@@ -249,6 +293,10 @@ mod org {
         
         pub fn add_dao_member_private(&mut self,name:String,member: AccountId) -> bool {
 
+            let caller = self.env().caller();
+            let  mut auth_instance = self.get_auth_by_address(self.auth_contract_address);
+           // assert!(auth_instance.has_permission(caller, String::from("auth"),String::from("grant")));
+            auth_instance.grant_permission(member, String::from("vote"), String::from("vote"));
 
             match self.members.insert(member,name) {
                 Some(_) => { false},
@@ -284,6 +332,7 @@ mod org {
                 return false;
             }
 
+
             match self.moderators.take(&member) {
                 None => { false}
                 Some(_) => {
@@ -301,6 +350,7 @@ mod org {
 
         #[ink(message)]
         pub fn remove_dao_member(&mut self, member: AccountId) -> bool  {
+
 
             match self.members.take(&member) {
                 None => { false}

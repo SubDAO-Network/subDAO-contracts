@@ -18,6 +18,7 @@ mod main {
     };
     // use ink_prelude::string::String;
     use dao_manager::DAOManager;
+    use org::OrgManager;
     use template_manager::TemplateManager;
     use template_manager::DAOTemplate;
     const one_unit: u128 = 1_000_000_000_000;
@@ -153,25 +154,36 @@ mod main {
             let mut iter = self.instance_map.values();
             let mut temp = iter.next();
             while temp.is_some() {
-                dao_vec.push(temp.unwrap().clone());
+                let dao = Main::fillOrgOwner(temp.unwrap().clone());
+                dao_vec.push(dao);
                 temp = iter.next();
             }
             dao_vec
         }
 
+        fn fillOrgOwner(mut dao: DAOInstance) -> DAOInstance {
+            let org_addr_op = dao.dao_manager.query_component_addrs().org_addr;
+            if org_addr_op.is_none() {
+                return dao
+            }
+            let org_addr: AccountId = org_addr_op.unwrap();
+            let org_instance: OrgManager = ink_env::call::FromAccountId::from_account_id(org_addr);
+            dao.owner = org_instance.get_dao_owner();
+            dao
+        }
+
         #[ink(message)]
         pub fn list_dao_instances_by_owner(&mut self, owner: AccountId) -> Vec<DAOInstance> {
-            let id_list_op = self.instance_map_by_owner.get(&owner);
+
             let mut dao_vec = Vec::new();
-            if id_list_op.is_none() {
-                return dao_vec;
-            }
-            let id_list = id_list_op.unwrap();
-            let mut iter = id_list.into_iter();
-            let mut item = iter.next();
-            while item.is_some() {
-                dao_vec.push(self.instance_map.get(item.unwrap()).unwrap().clone());
-                item = iter.next();
+            let mut iter = self.instance_map.values();
+            let mut temp = iter.next();
+            while temp.is_some() {
+                let dao: DAOInstance = Main::fillOrgOwner(temp.unwrap().clone());
+                if owner == dao.owner {
+                    dao_vec.push(dao);
+                }
+                temp = iter.next();
             }
             dao_vec
         }
