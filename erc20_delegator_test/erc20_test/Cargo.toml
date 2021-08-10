@@ -17,7 +17,7 @@ scale-info = { version = "0.6.0", default-features = false, features = ["derive"
 # Should be removed once bitvecto-rs/bitvec#105 is resolved
 funty = "=1.1.0"
 
-erc20 = { version = "0.1.0", path = "../erc20", default-features = false, features = ["ink-as-dependency"] }
+erc20 = { version = "0.1.0", path = "../../erc20", default-features = false, features = ["ink-as-dependency"] }
 
 [lib]
 name = "erc20_test"
