@@ -9,7 +9,6 @@ mod erc20 {
     use alloc::string::String;
     use ink_storage::{
         collections::HashMap as StorageHashMap,
-        traits::{PackedLayout, SpreadLayout},
     };
 
     /// Indicates whether a transaction is already confirmed or needs further confirmations.
@@ -42,19 +41,6 @@ mod erc20 {
         spender: AccountId,
         #[ink(topic)]
         value: u64,
-    }
-
-    #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
-    )]
-    pub struct DisplayInfo {
-        name: String,
-        symbol: String,
-        total_supply: u64,
-        decimals: u8,
-        owner: AccountId,
     }
 
     impl Erc20 {
@@ -100,17 +86,6 @@ mod erc20 {
         }
 
         #[ink(message)]
-        pub fn query_info(&self) -> DisplayInfo {
-            DisplayInfo {
-                name: self.name.clone(),
-                symbol: self.symbol.clone(),
-                total_supply: self.total_supply,
-                decimals: self.decimals,
-                owner: self.owner
-            }
-        }
-
-        #[ink(message)]
         pub fn balance_of(&self, owner: AccountId) -> u64 {
             self.balance_of_or_zero(&owner)
         }
@@ -123,6 +98,9 @@ mod erc20 {
         #[ink(message)]
         pub fn transfer(&mut self, to: AccountId, value: u64) -> bool {
             let from = self.env().caller();
+            // TODO: debgu
+            ink_env::debug_println!("wasm contract is erc20 transfer: caller {:?}", from);
+            ink_env::debug_println!("wasm contract is erc20 transfer: address {:?}, value {}", to, value);
             self.transfer_from_to(from, to, value)
         }
 
@@ -130,8 +108,25 @@ mod erc20 {
         pub fn approve(&mut self, spender: AccountId, value: u64) -> bool {
             let owner = self.env().caller();
             self.allowances.insert((owner, spender), value);
+            ink_env::debug_println!("wasm contract is erc20 approve: owner {:?}, spender {:?}", owner, spender);
+            ink_env::debug_println!("wasm contract is erc20 approve: value {}", value);
+
             self.env().emit_event(Approval {
                 owner,
+                spender,
+                value,
+            });
+            true
+        }
+
+        #[ink(message)]
+        pub fn approve_from(&mut self, from: AccountId, spender: AccountId, value: u64) -> bool {
+            self.allowances.insert((from, spender), value);
+            ink_env::debug_println!("wasm contract is erc20 approve: owner {:?}, spender {:?}", from, spender);
+            ink_env::debug_println!("wasm contract is erc20 approve: value {}", value);
+
+            self.env().emit_event(Approval {
+                owner: from,
                 spender,
                 value,
             });
@@ -146,12 +141,17 @@ mod erc20 {
             value: u64,
         ) -> bool {
             let caller = self.env().caller();
+            // TODO: debgu
+            //ink_env::debug_println!("wasm contract is erc20 transfer_from: from {:?}", from.clone());
+            //ink_env::debug_println!("wasm contract is erc20 transfer_from: address {:?}, value {}", to.clone(), value);
+
             let allowance = self.allowance_of_or_zero(&from, &caller);
             if allowance < value {
+                ink_env::debug_println!("wasm contract is erc20 transfer_from: allowance {}", allowance);
                 return false
             }
             self.allowances.insert((from, caller), allowance - value);
-            self.transfer_from_to(from, to, value)
+            return self.transfer_from_to(from, to, value);
         }
 
         #[ink(message)]
@@ -198,6 +198,10 @@ mod erc20 {
             }
             self.balances.insert(from, from_balance - value);
             let to_balance = self.balance_of_or_zero(&to);
+            // TODO: debgu
+            ink_env::debug_println!("wasm contract is erc20 transfer_from_to: caller {:?}", from.clone());
+            ink_env::debug_println!("wasm contract is erc20 transfer_from_to: address {:?}, value {}", to.clone(), value);
+
             self.balances.insert(to, to_balance + value);
             self.env().emit_event(Transfer {
                 from: Some(from),
