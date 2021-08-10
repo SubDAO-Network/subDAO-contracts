@@ -18,7 +18,6 @@ use ink_lang as ink;
 
 #[ink::contract]
 mod erc20_delegator_test {
-    #[cfg(not(feature = "ink-as-dependency"))]
     use ink_storage::{
         traits::{
             PackedLayout,
@@ -32,7 +31,7 @@ mod erc20_delegator_test {
     use erc20_test::Erc20Test;
 
     /// Indicates whether a transaction is already confirmed or needs further confirmations.
-    #[derive(scale::Encode, scale::Decode, Clone, Copy, SpreadLayout, PackedLayout)]
+    #[derive(Debug, scale::Encode, scale::Decode, Clone, Copy, SpreadLayout, PackedLayout)]
     #[cfg_attr(
     feature = "std",
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
@@ -44,7 +43,7 @@ mod erc20_delegator_test {
     }
 
     /// Indicates whether a transaction is already confirmed or needs further confirmations.
-    #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
+    #[derive(Debug, scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
     #[cfg_attr(
     feature = "std",
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
@@ -97,7 +96,7 @@ mod erc20_delegator_test {
         }
 
         #[ink(message)]
-        pub fn instance_by_template(&mut self, index: u64, initial_supply: u64, decimals: u8, controller: AccountId) -> bool {
+        pub fn instance_by_template(&mut self, index: u64, name: String, symbol: String, initial_supply: u64, decimals: u8, controller: AccountId) -> bool {
             assert_eq!(self.instance_index + 1 > self.instance_index, true);
             let total_balance = Self::env().balance();
             assert_eq!(total_balance >= 20, true);
@@ -107,9 +106,10 @@ mod erc20_delegator_test {
 
             // instance erc20
             // TODO add instance event
-            let erc_instance = Erc20::new(initial_supply, decimals, controller)
+            let erc_instance = Erc20::new(name, symbol, initial_supply, decimals, controller)
                 .endowment(total_balance / 4)
                 .code_hash(template.erc20_code_hash)
+                .salt_bytes(1_i32.to_le_bytes())
                 .instantiate()
                 .expect("failed at instantiating the `Erc20` contract");
 
@@ -118,6 +118,7 @@ mod erc20_delegator_test {
             let erc_test_instance = Erc20Test::new(erc_instance.clone())
                 .endowment(total_balance / 4)
                 .code_hash(template.erc20_test_code_hash)
+                .salt_bytes(1_i32.to_le_bytes())
                 .instantiate()
                 .expect("failed at instantiating the `Erc20` contract");
 
